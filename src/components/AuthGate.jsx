@@ -25,7 +25,14 @@ export default function AuthGate({ children }) {
   const sendMagicLink = async (e) => {
     e.preventDefault();
     setError(null);
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    // emailRedirectTo usa la URL actual (localhost en dev, tu dominio de GitHub
+    // Pages en producción) en vez de depender solo del "Site URL" fijo de Supabase.
+    // Igual necesitás tener esa URL agregada en Authentication > URL Configuration
+    // > Redirect URLs, o Supabase la va a rechazar.
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: window.location.origin + window.location.pathname },
+    });
     if (error) setError(error.message);
     else setSent(true);
   };
