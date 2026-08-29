@@ -187,7 +187,7 @@ function App() {
     loading, spaces, exercises, sets, cycleStart,
     addSpace, renameSpace, removeSpace,
     addExercise, removeExercise, updateExerciseMeta,
-    addSet, removeSet,
+    addSet, removeSet, updateCycleStart,
   } = useCarga();
 
   const [activeSpaceId, setActiveSpaceId] = useState(null);
@@ -259,6 +259,13 @@ function App() {
     }
   };
 
+  const handleFinishCycle = () => {
+    const confirmed = window.confirm(
+      "¿Terminar el ciclo actual ahora? Esto reinicia el contador a Semana 1/3 a partir de hoy, sin importar cuánto llevaba corriendo antes."
+    );
+    if (confirmed) updateCycleStart(new Date());
+  };
+
   if (loading || !activeSpace) {
     return (
       <div style={{ background: theme.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -275,16 +282,25 @@ function App() {
       <div className="px-5 pt-6 pb-3 sticky top-0 z-10" style={{ background: theme.bg, borderBottom: `1px solid ${theme.border}` }}>
         <div className="flex items-baseline justify-between">
           <h1 style={{ ...display, fontSize: 34 }}>CARGA</h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap justify-end">
             <div className="flex items-center gap-1.5">
               <div style={{ width: 8, height: 8, borderRadius: 4, background: WEEK_COLOR[weekInCycle] }} />
               <span style={{ ...mono, fontSize: 11, color: theme.textMuted }}>
                 Semana {weekInCycle}/3 · rutina cambia en {daysUntilChange}d
               </span>
             </div>
-            <button onClick={() => supabase.auth.signOut()} style={{ ...mono, fontSize: 10, color: theme.textMuted }}>
-              salir
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleFinishCycle}
+                title="Marcar el ciclo actual como terminado y empezar de nuevo desde hoy"
+                style={{ ...mono, fontSize: 10, color: theme.plateBlue, border: `1px solid ${theme.plateBlue}`, borderRadius: 6, padding: "2px 6px" }}
+              >
+                terminar ciclo
+              </button>
+              <button onClick={() => supabase.auth.signOut()} style={{ ...mono, fontSize: 10, color: theme.textMuted }}>
+                salir
+              </button>
+            </div>
           </div>
         </div>
 
