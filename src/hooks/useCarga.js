@@ -113,6 +113,18 @@ export function useCarga() {
     setExercises((ex) => ex.map((e) => (e.id === id ? { ...e, ...dbPatch } : e)));
   };
 
+  // Archiva todos los ejercicios activos (de todos los espacios): los saca de la
+  // rutina visible, pero sus set_logs quedan intactos en la base para siempre —
+  // el historial por nombre de ejercicio los sigue encontrando.
+  const archiveAllExercises = async () => {
+    const activeIds = exercises.filter((e) => !e.archived_at).map((e) => e.id);
+    if (activeIds.length === 0) return;
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from("exercises").update({ archived_at: nowIso }).in("id", activeIds);
+    if (error) return console.error(error);
+    setExercises((ex) => ex.map((e) => (activeIds.includes(e.id) ? { ...e, archived_at: nowIso } : e)));
+  };
+
   // ---- Series / rondas ----
   const addSet = async (exerciseId, exerciseName, rounds, reps, weight) => {
     const { data, error } = await supabase
@@ -152,6 +164,7 @@ export function useCarga() {
     addExercise,
     removeExercise,
     updateExerciseMeta,
+    archiveAllExercises,
     addSet,
     removeSet,
     updateCycleStart,

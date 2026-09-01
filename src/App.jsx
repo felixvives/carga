@@ -186,7 +186,7 @@ function App() {
   const {
     loading, spaces, exercises, sets, cycleStart,
     addSpace, renameSpace, removeSpace,
-    addExercise, removeExercise, updateExerciseMeta,
+    addExercise, removeExercise, updateExerciseMeta, archiveAllExercises,
     addSet, removeSet, updateCycleStart,
   } = useCarga();
 
@@ -206,7 +206,7 @@ function App() {
 
   const activeSpace = spaces.find((s) => s.id === activeSpaceId);
   const spaceExercises = useMemo(
-    () => exercises.filter((e) => e.space_id === activeSpaceId).sort((a, b) => a.position - b.position),
+    () => exercises.filter((e) => e.space_id === activeSpaceId && !e.archived_at).sort((a, b) => a.position - b.position),
     [exercises, activeSpaceId]
   );
 
@@ -261,9 +261,11 @@ function App() {
 
   const handleFinishCycle = () => {
     const confirmed = window.confirm(
-      "¿Terminar el ciclo actual ahora? Esto reinicia el contador a Semana 1/3 a partir de hoy, sin importar cuánto llevaba corriendo antes."
+      "¿Terminar el ciclo actual ahora? Se reinicia el contador a Semana 1/3 desde hoy, y las rutinas de cada espacio quedan en blanco para armar las nuevas — pero todo lo que ya registraste queda guardado, y el historial lo va a seguir mostrando cuando repitas un ejercicio."
     );
-    if (confirmed) updateCycleStart(new Date());
+    if (!confirmed) return;
+    updateCycleStart(new Date());
+    archiveAllExercises();
   };
 
   if (loading || !activeSpace) {
