@@ -187,6 +187,7 @@ function App() {
     loading, spaces, exercises, sets, cycleStart,
     addSpace, renameSpace, removeSpace,
     addExercise, removeExercise, updateExerciseMeta, archiveAllExercises,
+    renameExercise, moveExercise,
     addSet, removeSet, updateCycleStart,
   } = useCarga();
 
@@ -388,9 +389,35 @@ function App() {
             />
             <p style={{ ...mono, fontSize: 10, color: theme.textMuted }} className="mb-2 uppercase">Ejercicios</p>
             <div className="flex flex-col gap-1 mb-3">
-              {spaceExercises.map((ex) => (
-                <div key={ex.id} className="flex items-center justify-between px-2 py-1.5 rounded" style={{ background: theme.surfaceElevated }}>
-                  <span style={{ fontSize: 13 }}>{ex.name}</span>
+              {spaceExercises.map((ex, i) => (
+                <div key={ex.id} className="flex items-center gap-2 px-2 py-1.5 rounded" style={{ background: theme.surfaceElevated }}>
+                  <div className="flex flex-col">
+                    <button
+                      disabled={i === 0}
+                      onClick={() => moveExercise(activeSpaceId, ex.id, "up")}
+                      style={{ color: i === 0 ? theme.border : theme.textMuted, fontSize: 9, lineHeight: 1, padding: "1px 2px" }}
+                    >
+                      ▲
+                    </button>
+                    <button
+                      disabled={i === spaceExercises.length - 1}
+                      onClick={() => moveExercise(activeSpaceId, ex.id, "down")}
+                      style={{ color: i === spaceExercises.length - 1 ? theme.border : theme.textMuted, fontSize: 9, lineHeight: 1, padding: "1px 2px" }}
+                    >
+                      ▼
+                    </button>
+                  </div>
+                  <input
+                    key={ex.id + ex.name}
+                    defaultValue={ex.name}
+                    onBlur={(e) => {
+                      const trimmed = e.target.value.trim();
+                      if (trimmed && trimmed !== ex.name) renameExercise(ex.id, trimmed);
+                    }}
+                    onKeyDown={(e) => e.key === "Enter" && e.target.blur()}
+                    className="flex-1 outline-none text-sm"
+                    style={{ background: "transparent", border: "none", color: theme.textPrimary }}
+                  />
                   <button onClick={() => removeExercise(ex.id)} style={{ color: theme.textMuted }}>×</button>
                 </div>
               ))}

@@ -113,6 +113,40 @@ export function useCarga() {
     setExercises((ex) => ex.map((e) => (e.id === id ? { ...e, ...dbPatch } : e)));
   };
 
+  // Renombra el ejercicio Y actualiza el nombre denormalizado en sus set_logs ya
+  // existentes, para que el historial (que compara por nombre) no se desincronice.
+  const renameExercise = async (id, name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const { error } = await supabase.from("exercises").update({ name: trimmed }).eq("id", id);
+    if (error) return console.error(error);
+    const { error: e2 } = await supabase.from("set_logs").update({ exercise_name: trimmed }).eq("exercise_id", id);
+    if (e2) console.error(e2);
+    setExercises((ex) => ex.map((e) => (e.id === id ? { ...e, name: trimmed } : e)));
+    setSets((s) => s.map((row) => (row.exercise_id === id ? { ...row, exercise_name: trimmed } : row)));
+  };
+
+  // Reordena dentro del mismo espacio, moviendo un lugar hacia arriba o abajo,
+  // y reasigna posiciones secuenciales para todo el espacio.
+  const moveExercise = async (spaceId, exerciseId, direction) => {
+    const list = exercises
+      .filter((e) => e.space_id === spaceId && !e.archived_at)
+      .sort((a, b) => a.position - b.position);
+    const idx = list.findIndex((e) => e.id === exerciseId);
+    const newIdx = idx + (direction === "up" ? -1 : 1);
+    if (idx === -1 || newIdx < 0 || newIdx >= list.length) return;
+    const reordered = [...list];
+    [reordered[idx], reordered[newIdx]] = [reordered[newIdx], reordered[idx]];
+    const updates = reordered.map((e, i) => ({ id: e.id, position: i }));
+    await Promise.all(updates.map(({ id, position }) => supabase.from("exercises").update({ position }).eq("id", id)));
+    setExercises((ex) =>
+      ex.map((e) => {
+        const found = updates.find((u) => u.id === e.id);
+        return found ? { ...e, position: found.position } : e;
+      })
+    );
+  };
+
   // Archiva todos los ejercicios activos (de todos los espacios): los saca de la
   // rutina visible, pero sus set_logs quedan intactos en la base para siempre —
   // el historial por nombre de ejercicio los sigue encontrando.
@@ -164,6 +198,8 @@ export function useCarga() {
     addExercise,
     removeExercise,
     updateExerciseMeta,
+    renameExercise,
+    moveExercise,
     archiveAllExercises,
     addSet,
     removeSet,
