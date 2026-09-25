@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useCarga } from "./hooks/useCarga.js";
 import { supabase } from "./supabaseClient.js";
+import HistoryLibrary from "./components/HistoryLibrary.jsx";
 
 // ---- Design tokens ----
 const theme = {
@@ -195,6 +196,7 @@ function App() {
   const [editingRoutine, setEditingRoutine] = useState(false);
   const [newExName, setNewExName] = useState("");
   const [nameSuggestion, setNameSuggestion] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     if (!activeSpaceId && spaces.length) setActiveSpaceId(spaces[0].id);
@@ -294,6 +296,13 @@ function App() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => setShowHistory((v) => !v)}
+                title="Ver el historial de pesos de todos tus ejercicios"
+                style={{ ...mono, fontSize: 10, color: theme.plateGreen, border: `1px solid ${theme.plateGreen}`, borderRadius: 6, padding: "2px 6px" }}
+              >
+                {showHistory ? "cerrar historial" : "historial"}
+              </button>
+              <button
                 onClick={handleFinishCycle}
                 title="Marcar el ciclo actual como terminado y empezar de nuevo desde hoy"
                 style={{ ...mono, fontSize: 10, color: theme.plateBlue, border: `1px solid ${theme.plateBlue}`, borderRadius: 6, padding: "2px 6px" }}
@@ -307,6 +316,8 @@ function App() {
           </div>
         </div>
 
+        {!showHistory && (
+        <>
         <div className="flex flex-wrap gap-1 mt-4">
           {spaces.map((sp) => (
             <div key={sp.id} className="relative flex-1" style={{ minWidth: 44 }}>
@@ -359,8 +370,13 @@ function App() {
           </div>
           <span style={{ ...mono, fontSize: 11, color: theme.textMuted }}>{daysTrainedThisWeek} días esta semana</span>
         </div>
+        </>
+        )}
       </div>
 
+      {showHistory && <HistoryLibrary sets={sets} exercises={exercises} onClose={() => setShowHistory(false)} />}
+
+      {!showHistory && (
       <div className="px-5 py-5 max-w-md mx-auto">
         <div className="flex items-baseline justify-between mb-4">
           <div>
@@ -476,6 +492,7 @@ function App() {
           })}
         </div>
       </div>
+      )}
     </div>
   );
 }
