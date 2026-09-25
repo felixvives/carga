@@ -147,6 +147,16 @@ export function useCarga() {
     );
   };
 
+  // Saca UN ejercicio de su rutina sin borrar su historial: mismo mecanismo que
+  // archiveAllExercises pero para un solo id. Es lo que usa el botón "×" al
+  // editar una rutina — a diferencia de removeExercise, esto no borra series.
+  const archiveExercise = async (id) => {
+    const nowIso = new Date().toISOString();
+    const { error } = await supabase.from("exercises").update({ archived_at: nowIso }).eq("id", id);
+    if (error) return console.error(error);
+    setExercises((ex) => ex.map((e) => (e.id === id ? { ...e, archived_at: nowIso } : e)));
+  };
+
   // Archiva todos los ejercicios activos (de todos los espacios): los saca de la
   // rutina visible, pero sus set_logs quedan intactos en la base para siempre —
   // el historial por nombre de ejercicio los sigue encontrando.
@@ -197,6 +207,7 @@ export function useCarga() {
     removeSpace,
     addExercise,
     removeExercise,
+    archiveExercise,
     updateExerciseMeta,
     renameExercise,
     moveExercise,

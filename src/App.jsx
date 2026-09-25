@@ -187,7 +187,7 @@ function App() {
   const {
     loading, spaces, exercises, sets, cycleStart,
     addSpace, renameSpace, removeSpace,
-    addExercise, removeExercise, updateExerciseMeta, archiveAllExercises,
+    addExercise, removeExercise, archiveExercise, updateExerciseMeta, archiveAllExercises,
     renameExercise, moveExercise,
     addSet, removeSet, updateCycleStart,
   } = useCarga();
@@ -254,12 +254,24 @@ function App() {
 
   const handleRemoveSpace = (id) => {
     if (spaces.length <= 1) return;
+    const sp = spaces.find((s) => s.id === id);
+    const confirmed = window.confirm(
+      `¿Eliminar el espacio "${sp?.label || ""}"? Esto borra también sus ejercicios y TODAS las series que registraste en ellos, de forma permanente — no queda en el historial. Si solo querés armar una rutina nueva, usá "terminar ciclo" en vez de esto.`
+    );
+    if (!confirmed) return;
     removeSpace(id);
     if (activeSpaceId === id) {
       const next = spaces.find((s) => s.id !== id) || null;
       setActiveSpaceId(next ? next.id : null);
       setEditingRoutine(false);
     }
+  };
+
+  // Saca el ejercicio de esta rutina (archiveExercise), NO lo borra: las series
+  // que ya registraste quedan intactas y el Historial las sigue mostrando si
+  // volvés a agregar el mismo ejercicio más adelante.
+  const handleRemoveExercise = (ex) => {
+    archiveExercise(ex.id);
   };
 
   const handleFinishCycle = () => {
@@ -434,7 +446,13 @@ function App() {
                     className="flex-1 outline-none text-sm"
                     style={{ background: "transparent", border: "none", color: theme.textPrimary }}
                   />
-                  <button onClick={() => removeExercise(ex.id)} style={{ color: theme.textMuted }}>×</button>
+                  <button
+                    onClick={() => handleRemoveExercise(ex)}
+                    title="Sacar de esta rutina (el historial de pesos se conserva)"
+                    style={{ color: theme.textMuted }}
+                  >
+                    ×
+                  </button>
                 </div>
               ))}
             </div>
